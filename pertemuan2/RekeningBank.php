@@ -7,16 +7,19 @@ declare(strict_types=1);
  */
 class RekeningBank
 {
-    // TODO 1: ganti angka ajaib berikut menjadi konstanta bernama.
-    //   bunga tahunan 0.025 · biaya admin 5000 · batas penarikan 5000000
+    // TODO 1: konstanta
+    public const BUNGA_TAHUNAN = 0.025;
+    public const BIAYA_ADMINISTRASI = 5000;
+    public const BATAS_PENARIKAN_SEKALI = 5000000;
 
-    // TODO 2: deklarasikan properti statis penghitung jumlah rekening.
+    // TODO 2: properti statis penghitung jumlah rekening
+    private static int $jumlahRekening = 0;
 
     private float $saldo;
 
     /**
      * Default parameter menggantikan constructor overloading.
-     * TODO 3: lengkapi validasi nomor kosong dan saldo awal negatif.
+     * TODO 3: validasi nomor kosong dan saldo awal negatif.
      * TODO 4: naikkan penghitung jumlah rekening.
      */
     public function __construct(
@@ -24,52 +27,111 @@ class RekeningBank
         private readonly string $pemilik,
         float $saldoAwal = 0,
     ) {
+        // TODO 3: validasi
+        if ($this->nomor === '') {
+            throw new InvalidArgumentException(
+                'Nomor rekening tidak boleh kosong'
+            );
+        }
+
+        if ($saldoAwal < 0) {
+            throw new InvalidArgumentException(
+                'Saldo awal tidak boleh negatif'
+            );
+        }
+
         $this->saldo = $saldoAwal;
+
+        // TODO 4: tambah jumlah rekening
+        self::$jumlahRekening++;
     }
 
     /**
      * TODO 5: named constructor — rekening pelajar, saldo awal nol.
-     *         Gunakan `new static()`, BUKAN `new self()`.
-     *         Alasannya ada di modul teori pertemuan 3 (LateBinding.php).
+     * Gunakan new static(), BUKAN new self().
      */
-    public static function rekeningPelajar(string $nomor, string $pemilik): static
-    {
-        throw new RuntimeException('TODO 5 belum dikerjakan');
+    public static function rekeningPelajar(
+        string $nomor,
+        string $pemilik
+    ): static {
+        return new static($nomor, $pemilik, 0);
     }
 
     public function setor(float $jumlah): void
     {
         // TODO 6
+        if ($jumlah <= 0) {
+            throw new InvalidArgumentException(
+                'Jumlah setoran harus positif'
+            );
+        }
+
+        $this->saldo += $jumlah;
     }
 
     public function tarik(float $jumlah): void
     {
-        // TODO 7: tolak <= 0, tolak melebihi saldo, tolak melebihi batas sekali tarik.
+        // TODO 7
+        if ($jumlah <= 0) {
+            throw new InvalidArgumentException(
+                'Jumlah penarikan harus positif'
+            );
+        }
+
+        if ($jumlah > self::BATAS_PENARIKAN_SEKALI) {
+            throw new InvalidArgumentException(
+                'Jumlah penarikan melebihi batas'
+            );
+        }
+
+        if ($jumlah > $this->saldo) {
+            throw new InvalidArgumentException(
+                'Saldo tidak mencukupi'
+            );
+        }
+
+        $this->saldo -= $jumlah;
     }
 
     /** TODO 8 */
     public function potongBiayaAdmin(): void
     {
+        if ($this->saldo >= self::BIAYA_ADMINISTRASI) {
+            $this->saldo -= self::BIAYA_ADMINISTRASI;
+        } else {
+            $this->saldo = 0;
+        }
     }
 
     /** TODO 9 */
     public static function getJumlahRekening(): int
     {
-        return -1;   // ganti
+        return self::$jumlahRekening;
     }
 
     /** TODO 10 */
     public static function bungaSetahun(float $pokok): float
     {
-        return 0;   // ganti
+        return $pokok * self::BUNGA_TAHUNAN;
     }
 
-    public function getSaldo(): float { return $this->saldo; }
-    public function getNomor(): string { return $this->nomor; }
+    public function getSaldo(): float
+    {
+        return $this->saldo;
+    }
+
+    public function getNomor(): string
+    {
+        return $this->nomor;
+    }
 
     public function __toString(): string
     {
-        return sprintf('Rekening[%s] %-14s Rp%s',
-            $this->nomor, $this->pemilik, number_format($this->saldo, 2, ',', '.'));
+        return sprintf(
+            'Rekening[%s] %-14s Rp%s',
+            $this->nomor,
+            $this->pemilik,
+            number_format($this->saldo, 2, ',', '.')
+        );
     }
 }
